@@ -25,20 +25,20 @@ namespace Calculator.Controllers
             _logger = logger;
         }
 
-        private double number = 0;
+        private static double number = 0;
 
 
         [HttpGet]
         public double Get()
         {
-            return number;
+            return MemoryController.number;
         }
 
         [HttpPost]
         public void Post(Number data)
         {
             double number = data.Value;
-            this.number = number;
+            MemoryController.number = number;
         }
     }
 }
