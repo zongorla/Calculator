@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Calculator.Services;
 
 namespace Calculator
 {
@@ -28,6 +29,8 @@ namespace Calculator
             {
                 configuration.RootPath = "ClientApp/build";
             });
+            INumberStorage storage = new FileNumberStorage(Configuration["FileStoragePath"]);
+            services.AddSingleton(typeof(INumberStorage), storage);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

@@ -1,5 +1,6 @@
 import { Action, Reducer } from 'redux';
 import { AppThunkAction } from './';
+import { MemoryService} from '../memory'
 
 export interface CalculatorState {
     buttons: Array<CalculatorButton>;
@@ -91,7 +92,7 @@ class Operand {
 
     get stringValue(): string {
         if (this.hasValue) {
-            return "" + this._value;
+            return this._value;
         } else {
             return "";
         }
@@ -141,13 +142,14 @@ export type KnownAction = ClearScreenAction
     | ErrorMemorySaveAction
     | HandleButtonAction;
 
+
+const memoryService = new MemoryService();
 export const actionCreators = {
     clear: () => ({ type: 'CLEAR_SCREEN' } as ClearScreenAction),
     load: (): AppThunkAction<KnownAction> => (dispatch, getState ) => {
         const appState = getState() ;
         if (appState && appState.calculator) {
-            fetch(`memory`).then(response => response.json() as Promise<number>)
-                .then(data => {
+            memoryService.load().then(data => {
                     dispatch({ type: 'RECEIVE_MEMORY_LOAD', number: data });
                 }).catch(() => {
                     dispatch({ type: 'ERROR_MEMORY_SAVE' })
@@ -158,19 +160,15 @@ export const actionCreators = {
     save: (): AppThunkAction<KnownAction> => (dispatch, getState) => {
         const appState = getState();
         if (appState && appState.calculator && appState.calculator.currentOperand.hasValue) {
-            let toSave = appState.calculator.currentOperand.value;
-            fetch(`memory`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ value: toSave }),
-            }).catch(() => {
-                dispatch({ type: 'ERROR_MEMORY_SAVE' });
-            }).then(() => {
-                dispatch({ type: 'RECEIVE_MEMORY_SAVE' });
-            });
-            dispatch({ type: 'REQUEST_MEMORY_SAVE', number: toSave});
+            if (appState.calculator.currentOperand.isValid()) {
+                let toSave = appState.calculator.currentOperand.value;
+                memoryService.save(toSave).catch(() => {
+                    dispatch({ type: 'ERROR_MEMORY_SAVE' });
+                }).then(() => {
+                    dispatch({ type: 'RECEIVE_MEMORY_SAVE' });
+                });
+                dispatch({ type: 'REQUEST_MEMORY_SAVE', number: toSave });
+            }
         }
     },
     onButtonClick: (event: React.MouseEvent<HTMLButtonElement>): AppThunkAction<HandleButtonAction> => (dispatch, getState) => {

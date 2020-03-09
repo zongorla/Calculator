@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json.Linq;
+using System;
+using Calculator.Services;
 
 namespace Calculator.Controllers
 {
@@ -15,30 +12,34 @@ namespace Calculator.Controllers
     }
 
     [ApiController]
-    [Route("[controller]")]
+    [Route("[controller]/{id?}")]
     public class MemoryController : ControllerBase
     {
         private readonly ILogger<MemoryController> _logger;
+        private readonly INumberStorage _numberStorage;
 
-        public MemoryController(ILogger<MemoryController> logger)
+        public MemoryController(ILogger<MemoryController> logger, INumberStorage numberStorage)
         {
             _logger = logger;
+            _numberStorage = numberStorage;
         }
 
-        private static double number = 0;
-
-
         [HttpGet]
-        public double Get()
+        public double Get(Guid id)
         {
-            return MemoryController.number;
+            return _numberStorage.Read(id);
         }
 
         [HttpPost]
-        public void Post(Number data)
+        public Guid Post(Number data)
         {
-            double number = data.Value;
-            MemoryController.number = number;
+            return _numberStorage.Create(data.Value);
+        }
+
+        [HttpPut]
+        public void Put(Guid id, [FromBody]Number data)
+        {
+            _numberStorage.Update(id, data.Value);
         }
     }
 }
